@@ -3,16 +3,20 @@ import { nextTick } from './next-tick'
 
 type AnyFunction = (...args: any[]) => any
 
-type Action<T, A> = (
+export type Action<T, A> = (
   state: T,
   arg: A,
-  send: <R>(action: Action<T, R>, arg: R) => Promise<T>,
-  update: <R>(action: Update<T, R>, arg: R) => T
+  send: Send<T, any>,
+  update: Update<T, any>
 ) => Promise<void>
 
-type Update<T, A> = (state: T, arg: A) => T
+export type Update<T, A> = (updater: Updater<T, A>, arg: A) => T
+export type Send<T, A> = (action: Action<T, A>, arg: A) => Promise<T>
 
-type Send<T, A> = (action: Action<T, A>, arg: A) => Promise<T>
+export type AnyUpdate<T> = Update<T, any>
+export type AnySend<T> = Send<T, any>
+
+type Updater<T, A> = (state: T, arg: A) => T
 
 type StateChangeCallback<T> = (state: T, prev: T) => void
 
@@ -32,7 +36,7 @@ interface HistoryEntry<T> {
   result: T
 }
 
-interface Options {
+export interface Options {
   logStateChanges?: boolean
   logActionCallbackTimings?: boolean
 }
@@ -134,8 +138,8 @@ export class Storage<T> {
     return this._state.value
   }
 
-  update<A> (action: Update<T, A>, arg: A): T {
-    let name = action.name
+  update<A> (updater: Updater<T, A>, arg: A): T {
+    let name = updater.name
 
     if (name === '') {
       name = 'anonymous'
@@ -149,7 +153,7 @@ export class Storage<T> {
     try {
       this._state.update(oldState => {
         // oldState is mutable inside this callback
-        const newState = action(oldState, arg)
+        const newState = updater(oldState, arg)
         this._previousStateValue = oldState
         return newState
       })
@@ -160,7 +164,7 @@ export class Storage<T> {
         result: this._state.value
       })
 
-      this._runActionCallbacks(action, arg, () => {
+      this._runActionCallbacks(updater, arg, () => {
         return
       })
 
