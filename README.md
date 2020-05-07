@@ -1,6 +1,6 @@
 # bassics
 
-bassics is a typesafe reactive frontend microframework for building high-performance client apps with familiar patterns like central, unidirectional state management, actions + reducers, html templates, and routing.
+bassics is a typesafe reactive frontend microframework for building highly performant client apps with familiar patterns like central, unidirectional state management, actions + reducers, html templates, and routing.
 
 Well, it will be. **It's not ready for use yet.** Hopefully version 0.1.0 will be published soon.
 
@@ -9,7 +9,7 @@ Well, it will be. **It's not ready for use yet.** Hopefully version 0.1.0 will b
 **Does not work, this is just my dreamcode for what I want to write.**
 
 ```ts
-import { App, html, Send, Update, TemplateResult } from 'bassics'
+import { App, html, Send, Update, Template } from 'bassics'
 
 interface State {
   count: number;
@@ -19,7 +19,7 @@ const initialState: State = { count: 0 }
 
 const app = new App(initialState, { renderOnUpdate: true })
 
-cosnt template: TemplateResult = (state: State, send: Send) => html`
+cosnt template: Template = (state: State, send: Send) => html`
   <p>Count is ${state.count}</p>
 `
 
@@ -58,8 +58,10 @@ function wait (amount) {
 
 ## TODO
 
-- [ ] Extract from existing project
-- [ ] Stop passing the store around
+- [x] Extract from existing project
+- [x] Stop passing the store around
 - [ ] Document example app
 - [ ] Include render action
+- [ ] SSR
+- [ ] Local dev setup?
 - [ ] Routing?

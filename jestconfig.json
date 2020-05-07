@@ -3,11 +3,15 @@
     "^.+\\.(t|j)sx?$": "ts-jest"
   },
   "testRegex": "(/test/.*|(\\.|/)test)\\.(jsx?|tsx?)$",
+  "moduleNameMapper": {
+    "lit-html": "@popeindustries/lit-html-server"
+  },
   "moduleFileExtensions": [
     "ts",
     "tsx",
     "js",
     "jsx",
     "json"
-  ]
+  ],
+  "testEnvironment": "jest-environment-jsdom-sixteen"
 }
