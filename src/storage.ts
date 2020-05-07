@@ -109,7 +109,7 @@ export class Storage<T> {
     return this._state.value
   }
 
-  next<A, U> (action: Action<T, A>, arg: A): Promise<void> {
+  next<A> (action: Action<T, A>, arg: A): Promise<void> {
     // const end = createMeasurement()
 
     return nextTick(async () => {
