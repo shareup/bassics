@@ -3,11 +3,11 @@ import { nextTick } from './next-tick'
 
 type AnyFunction = (...args: any[]) => any
 
-export type Update<T> = <A>(updater: Reducer<T, A>, arg: A) => T
+export type Update<T> = <A>(reducer: Reducer<T, A>, arg: A) => T
 export type Send<T> = <A>(action: Action<T, A>, arg: A) => Promise<T>
 
-type Reducer<T, A> = (state: T, arg: A) => T
-type Action<T, A> = (
+export type Reducer<T, A> = (state: T, arg: A) => T
+export type Action<T, A> = (
   state: T,
   arg: A,
   send: Send<T>,
@@ -64,7 +64,7 @@ const NullLogger = {
   }
 }
 
-export class Storage<T> {
+export class Store<T> {
   logger: Logger
 
   _options: Options
@@ -216,10 +216,7 @@ export class Storage<T> {
   onAction<A> (cb: ActionCallback<T>): void
   onAction<A> (fn: AnyFunction, cb: ActionCallback<T>): void
 
-  onAction<A> (
-    fn: ActionCallback<T> | AnyFunction,
-    cb?: ActionCallback<T>
-  ): void {
+  onAction (fn: ActionCallback<T> | AnyFunction, cb?: ActionCallback<T>): void {
     if (cb === undefined) {
       cb = fn as ActionCallback<T>
       this._updateActionCallbacks(this._all, cb)
@@ -229,7 +226,7 @@ export class Storage<T> {
     }
   }
 
-  _updateActionCallbacks<A> (fn: AnyFunction, cb: ActionCallback<T>): void {
+  _updateActionCallbacks (fn: AnyFunction, cb: ActionCallback<T>): void {
     let cbs = this._actionCallbacks.get(fn)
 
     if (cbs === undefined) {
@@ -264,6 +261,7 @@ export class Storage<T> {
         this.logger.error(e.stack)
       })
       .finally(() => {
+        end()
         // const duration = end().toFixed(3)
         // if (this._options.logActionCallbackTimings) {
         // this.logger.debug(`🏁 ${duration}ms ${action.name} callbacks finished`)

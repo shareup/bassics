@@ -1,12 +1,12 @@
-import { Storage, Send, Update } from '../src/storage'
+import { Store, Send, Update } from '../src/store'
 
 test('can initialize with state factory', () => {
   const initialState = { count: 0 }
 
-  const storeV1 = new Storage(initialState)
+  const storeV1 = new Store(initialState)
   expect(storeV1.state.count).toBe(0)
 
-  const storeV2 = new Storage(() => initialState)
+  const storeV2 = new Store(() => initialState)
   expect(storeV2.state.count).toBe(0)
 })
 
@@ -15,11 +15,11 @@ test('actions work', async () => {
     amount: number
   }
 
-  const store = new Storage<State>({ amount: 2 })
+  const store = new Store<State>({ amount: 2 })
   const msgs: string[] = []
 
   async function doAdd (
-    state: State,
+    _state: State,
     amount: number,
     send: Send<State>,
     update: Update<State>

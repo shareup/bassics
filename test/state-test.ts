@@ -4,10 +4,11 @@ test('can construct with a factory function', () => {
   const initialState = { count: 0 }
 
   const stateV1 = new State(initialState)
-  expect(stateV1.value.count).toBe(0)
+  stateV1.update({ count: 1 })
+  expect(stateV1.value.count).toBe(1)
 
   const stateV2 = new State(() => initialState)
-  expect(stateV1.value.count).toBe(0)
+  expect(stateV2.value.count).toBe(0)
 })
 
 test('value is frozen', () => {
