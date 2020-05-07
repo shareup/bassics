@@ -32,13 +32,13 @@ interface HistoryEntry<T> {
   result: T
 }
 
-export interface Options {
+interface Options {
   logger?: Logger
   logStateChanges?: boolean
   logActionCallbackTimings?: boolean
 }
 
-export interface Logger {
+interface Logger {
   debug: (...args: any[]) => void
   log: (...args: any[]) => void
   error: (...args: any[]) => void

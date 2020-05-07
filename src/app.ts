@@ -1,11 +1,9 @@
 import { Store, Send, Update } from './store'
-export { Send, Update } from './store'
-
 import { render, TemplateResult, SVGTemplateResult } from 'lit-html'
 
 type InitialValue<T> = () => T
 
-export interface Options {
+interface Options {
   renderOnStateChange?: boolean
 }
 
