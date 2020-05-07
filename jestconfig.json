@@ -13,8 +13,5 @@
     "jsx",
     "json"
   ],
-  "testEnvironment": "jest-environment-jsdom-sixteen",
-  "transformIgnorePatterns": [
-    "node_modules/(?!(lit-html)/)"
-  ]
+  "testEnvironment": "jest-environment-jsdom-sixteen"
 }
