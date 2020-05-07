@@ -12,7 +12,7 @@ export interface Options {
 // TODO: Pass some sort of rendering context to the templates to inject SSR or
 // service worker appropriate rendering functions
 
-type Template<T> = (
+export type Template<T> = (
   state: T,
   send: Send<T>,
   prev: T
