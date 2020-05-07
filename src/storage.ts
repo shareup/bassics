@@ -3,24 +3,20 @@ import { nextTick } from './next-tick'
 
 type AnyFunction = (...args: any[]) => any
 
-export type Action<T, A> = (
+export type Update<T> = <A>(updater: Reducer<T, A>, arg: A) => T
+export type Send<T> = <A>(action: Action<T, A>, arg: A) => Promise<T>
+
+type Reducer<T, A> = (state: T, arg: A) => T
+type Action<T, A> = (
   state: T,
   arg: A,
-  send: Send<T, any>,
-  update: Update<T, any>
+  send: Send<T>,
+  update: Update<T>
 ) => Promise<void>
-
-export type Update<T, A> = (updater: Updater<T, A>, arg: A) => T
-export type Send<T, A> = (action: Action<T, A>, arg: A) => Promise<T>
-
-export type AnyUpdate<T> = Update<T, any>
-export type AnySend<T> = Send<T, any>
-
-type Updater<T, A> = (state: T, arg: A) => T
 
 type StateChangeCallback<T> = (state: T, prev: T) => void
 
-type ActionCallback<T, A> = (
+type ActionCallback<T> = <A>(
   state: T,
   actionArg: A,
   actionName: string
@@ -37,22 +33,52 @@ interface HistoryEntry<T> {
 }
 
 export interface Options {
+  logger?: Logger
   logStateChanges?: boolean
   logActionCallbackTimings?: boolean
 }
 
+export interface Logger {
+  debug: (...args: any[]) => void
+  log: (...args: any[]) => void
+  error: (...args: any[]) => void
+  group: (name: string) => void
+  groupEnd: () => void
+}
+
+const NullLogger = {
+  debug: (..._args: any[]) => {
+    return
+  },
+  log: (..._args: any[]) => {
+    return
+  },
+  error: (..._args: any[]) => {
+    return
+  },
+  group: (_name: string) => {
+    return
+  },
+  groupEnd: () => {
+    return
+  }
+}
+
 export class Storage<T> {
+  logger: Logger
+
   _options: Options
   _state: State<T>
   _previousStateValue: T
   _history: HistoryEntry<T>[]
   _stateChangeCallbacks: StateChangeCallback<T>[]
   _all: () => void
-  _actionCallbacks: WeakMap<AnyFunction, ActionCallback<T, any>[]>
+  _actionCallbacks: WeakMap<AnyFunction, ActionCallback<T>[]>
   _errorCallbacks: ErrorCallback<T>[]
 
   constructor (initialState: T | InitialValue<T>, options: Options = {}) {
     this._options = options || {}
+    this.logger = this._options.logger || NullLogger
     this._state = new State(initialState)
     this._previousStateValue = Object.assign({}, this._state.value)
     this._history = []
@@ -66,8 +92,11 @@ export class Storage<T> {
 
     this._state.onUpdate(newState => {
       if (this._options.logStateChanges) {
-        // tslint:disable-next-line no-console
-        console.debug('✨ state changed', newState, this._previousStateValue)
+        this.logger.debug(
+          '✨ state changed',
+          newState,
+          this._previousStateValue
+        )
       }
 
       this._stateChangeCallbacks.forEach(cb => {
@@ -80,7 +109,7 @@ export class Storage<T> {
     return this._state.value
   }
 
-  next<A> (action: Action<T, A>, arg: A): Promise<void> {
+  next<A, U> (action: Action<T, A>, arg: A): Promise<void> {
     // const end = createMeasurement()
 
     return nextTick(async () => {
@@ -88,15 +117,14 @@ export class Storage<T> {
         await this.send(action, arg)
       } finally {
         // const duration = end().toFixed(3)
-        // console.debug(`🏁 ${duration}ms next ${action.name}`)
+        // this.logger.debug(`🏁 ${duration}ms next ${action.name}`)
       }
     })
   }
 
   async send<A> (action: Action<T, A>, arg: A): Promise<T> {
     // const end = createMeasurement()
-    // tslint:disable-next-line no-console
-    console.group(`send ${action.name}`)
+    this.logger.group(`send ${action.name}`)
     // const cbEnd = createMeasurement()
 
     try {
@@ -118,10 +146,8 @@ export class Storage<T> {
         return
       })
     } catch (e) {
-      // tslint:disable-next-line no-console
-      console.error(`🧨 send ${action.name}`, e.message)
-      // tslint:disable-next-line no-console
-      console.error(e.stack)
+      this.logger.error(`🧨 send ${action.name}`, e.message)
+      this.logger.error(e.stack)
 
       this._errorCallbacks.forEach(cb => {
         cb(this._state.value, e, action.name)
@@ -130,15 +156,14 @@ export class Storage<T> {
       throw e
     } finally {
       // const duration = end().toFixed(3)
-      // console.debug(`🏁 ${duration}ms send ${action.name}`)
-      // tslint:disable-next-line no-console
-      console.groupEnd()
+      // this.logger.debug(`🏁 ${duration}ms send ${action.name}`)
+      this.logger.groupEnd()
     }
 
     return this._state.value
   }
 
-  update<A> (updater: Updater<T, A>, arg: A): T {
+  update<A> (updater: Reducer<T, A>, arg: A): T {
     let name = updater.name
 
     if (name === '') {
@@ -146,8 +171,7 @@ export class Storage<T> {
     }
 
     // const end = createMeasurement()
-    // tslint:disable-next-line no-console
-    console.group(`update ${name}`)
+    this.logger.group(`update ${name}`)
     // const cbEnd = createMeasurement()
 
     try {
@@ -170,10 +194,8 @@ export class Storage<T> {
 
       return this._state.value
     } catch (e) {
-      // tslint:disable-next-line no-console
-      console.error(`🧨 update ${name}`, e.message)
-      // tslint:disable-next-line no-console
-      console.error(e.stack)
+      this.logger.error(`🧨 update ${name}`, e.message)
+      this.logger.error(e.stack)
 
       this._errorCallbacks.forEach(cb => {
         cb(this._state.value, e, name)
@@ -182,9 +204,8 @@ export class Storage<T> {
       throw e
     } finally {
       // const syncDuration = end()
-      // console.debug(`🚀 ${syncDuration.toFixed(3)}ms update ${name}`)
-      // tslint:disable-next-line no-console
-      console.groupEnd()
+      // this.logger.debug(`🚀 ${syncDuration.toFixed(3)}ms update ${name}`)
+      this.logger.groupEnd()
     }
   }
 
@@ -192,15 +213,15 @@ export class Storage<T> {
     this._errorCallbacks.push(cb)
   }
 
-  onAction<A> (cb: ActionCallback<T, A>): void
-  onAction<A> (fn: AnyFunction, cb: ActionCallback<T, A>): void
+  onAction<A> (cb: ActionCallback<T>): void
+  onAction<A> (fn: AnyFunction, cb: ActionCallback<T>): void
 
   onAction<A> (
-    fn: ActionCallback<T, A> | AnyFunction,
-    cb?: ActionCallback<T, A>
+    fn: ActionCallback<T> | AnyFunction,
+    cb?: ActionCallback<T>
   ): void {
     if (cb === undefined) {
-      cb = fn as ActionCallback<T, A>
+      cb = fn as ActionCallback<T>
       this._updateActionCallbacks(this._all, cb)
     } else {
       fn = fn as AnyFunction
@@ -208,7 +229,7 @@ export class Storage<T> {
     }
   }
 
-  _updateActionCallbacks<A> (fn: AnyFunction, cb: ActionCallback<T, A>): void {
+  _updateActionCallbacks<A> (fn: AnyFunction, cb: ActionCallback<T>): void {
     let cbs = this._actionCallbacks.get(fn)
 
     if (cbs === undefined) {
@@ -239,16 +260,13 @@ export class Storage<T> {
         // noop
       })
       .catch(e => {
-        // tslint:disable-next-line no-console
-        console.error(`🧨 ${action.name} callbacks`, e.message)
-        // tslint:disable-next-line no-console
-        console.error(e.stack)
+        this.logger.error(`🧨 ${action.name} callbacks`, e.message)
+        this.logger.error(e.stack)
       })
       .finally(() => {
         // const duration = end().toFixed(3)
         // if (this._options.logActionCallbackTimings) {
-        // tslint:disable-next-line no-console
-        // console.debug(`🏁 ${duration}ms ${action.name} callbacks finished`)
+        // this.logger.debug(`🏁 ${duration}ms ${action.name} callbacks finished`)
         // }
       })
   }

@@ -16,25 +16,20 @@ test('actions work', async () => {
   }
 
   const store = new Storage<State>({ amount: 2 })
+  const msgs: string[] = []
 
   async function doAdd (
     state: State,
     amount: number,
-    send: Send<State, any>,
-    update: Update<State, any>
+    send: Send<State>,
+    update: Update<State>
   ): Promise<void> {
     update(add, amount)
     await send(log, null)
   }
 
-  async function log (
-    state: State,
-    nothing: null,
-    _send: Send<State, any>,
-    _update: Update<State, any>
-  ) {
-    // tslint:disable-next-line no-console
-    console.debug(`current amount is: ${state.amount}`)
+  async function log (state: State) {
+    msgs.push(`current amount is: ${state.amount}`)
   }
 
   function add (state: State, amount: number): State {
@@ -46,4 +41,5 @@ test('actions work', async () => {
   await store.send(doAdd, 3)
 
   expect(store.state.amount).toBe(10)
+  expect(msgs.length).toBe(2)
 })
