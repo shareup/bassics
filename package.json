@@ -4,9 +4,10 @@
   "description": "Typesafe reactive frontend microframework",
   "type": "module",
   "module": "lib/index.js",
-  "main": "lib/index.js",
-  "exports": "lib/index.js",
   "types": "lib/index.d.ts",
+  "engines": {
+    "node": ">=0.13"
+  },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf lib",
@@ -21,7 +22,9 @@
     "postversion": "git push && git push --tags"
   },
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    "src/**/*",
+    "tsconfig.json"
   ],
   "repository": {
     "type": "git",
