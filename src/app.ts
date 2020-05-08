@@ -1,5 +1,6 @@
-import { Store, Send, Update } from './store'
+import { Store, Send } from './store'
 import { render, TemplateResult, SVGTemplateResult } from 'lit-html'
+export { render, html, TemplateResult, SVGTemplateResult } from 'lit-html'
 
 type InitialValue<T> = () => T
 
@@ -18,9 +19,8 @@ export type Template<T> = (
 
 export class App<T> {
   store: Store<T>
-  send: Send<T>
-  update: Update<T>
   mainTemplate: Template<T>
+  send: Send<T>
 
   _renderOnStateChange: boolean
 
@@ -43,15 +43,24 @@ export class App<T> {
     }
 
     this.send = this.store.send.bind(this.store)
-    this.update = this.store.update.bind(this.store)
   }
 
   mount (el: HTMLElement): void {
-    render(this.mainTemplate(this.store.state, this.send, this.store.state), el)
+    render(
+      this.mainTemplate(
+        this.store.state,
+        this.store.send.bind(this.store),
+        this.store.state
+      ),
+      el
+    )
 
     if (this._renderOnStateChange) {
       this.store.onStateChange((state, prev) => {
-        render(this.mainTemplate(state, this.send, prev), el)
+        render(
+          this.mainTemplate(state, this.store.send.bind(this.store), prev),
+          el
+        )
       })
     }
   }
