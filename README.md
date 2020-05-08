@@ -1,6 +1,6 @@
 # bassics
 
-bassics is a typesafe reactive frontend microframework for building highly performant client apps with familiar patterns like central, unidirectional state management, actions + reducers, html templates, and routing.
+bassics is a typesafe reactive frontend microframework for building highly performant client apps with familiar patterns like central, unidirectional state management, actions + reducers, html templates, and routing using esmodules and ready to work directly in the browser without a bundler if desired.
 
 Well, it will be. **It's not ready for use yet.** Hopefully version 0.1.0 will be published soon.
 
