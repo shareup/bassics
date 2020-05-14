@@ -49,20 +49,13 @@ export class App<T> {
   }
 
   mount (el: HTMLElement): void {
-    render(
-      this.mainTemplate(
-        this.store.state,
-        this.store.send.bind(this.store),
-        this.store.state
-      ),
-      el
-    )
+    const send = this.send
 
-    const send = this.store.send.bind(this.store)
+    render(this.mainTemplate(this.store.state, send, this.store.state), el)
 
     if (this._renderOnStateChange) {
       this.store.onStateChange(
-        raf((state, prev) => {
+        raf((state: T, prev: T) => {
           render(this.mainTemplate(state, send, prev), el)
         })
       )
