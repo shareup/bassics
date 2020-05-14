@@ -1,5 +1,6 @@
-import { Store, Send } from './store'
+import { Store, Send, Update } from './store'
 import { render, TemplateResult, SVGTemplateResult } from 'lit-html'
+import { raf } from './raf'
 export { render, html, TemplateResult, SVGTemplateResult } from 'lit-html'
 
 type InitialValue<T> = () => T
@@ -21,6 +22,7 @@ export class App<T> {
   store: Store<T>
   mainTemplate: Template<T>
   send: Send<T>
+  update: Update<T>
 
   _renderOnStateChange: boolean
 
@@ -43,25 +45,20 @@ export class App<T> {
     }
 
     this.send = this.store.send.bind(this.store)
+    this.update = this.store.update.bind(this.store)
   }
 
   mount (el: HTMLElement): void {
-    render(
-      this.mainTemplate(
-        this.store.state,
-        this.store.send.bind(this.store),
-        this.store.state
-      ),
-      el
-    )
+    const send = this.send
+
+    render(this.mainTemplate(this.store.state, send, this.store.state), el)
 
     if (this._renderOnStateChange) {
-      this.store.onStateChange((state, prev) => {
-        render(
-          this.mainTemplate(state, this.store.send.bind(this.store), prev),
-          el
-        )
-      })
+      this.store.onStateChange(
+        raf((state: T, prev: T) => {
+          render(this.mainTemplate(state, send, prev), el)
+        })
+      )
     }
   }
 }
