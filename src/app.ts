@@ -1,4 +1,4 @@
-import { Store, Send } from './store'
+import { Store, Send, Update } from './store'
 import { render, TemplateResult, SVGTemplateResult } from 'lit-html'
 export { render, html, TemplateResult, SVGTemplateResult } from 'lit-html'
 
@@ -21,6 +21,7 @@ export class App<T> {
   store: Store<T>
   mainTemplate: Template<T>
   send: Send<T>
+  update: Update<T>
 
   _renderOnStateChange: boolean
 
@@ -43,6 +44,7 @@ export class App<T> {
     }
 
     this.send = this.store.send.bind(this.store)
+    this.update = this.store.update.bind(this.store)
   }
 
   mount (el: HTMLElement): void {
