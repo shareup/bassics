@@ -12,7 +12,7 @@ export function raf<F extends fn> (work: F): (...args: Parameters<F>) => void {
 
       window.requestAnimationFrame(() => {
         scheduled = false
-        work(latestArgs)
+        work(...latestArgs)
       })
     }
   }
