@@ -12,10 +12,14 @@ interface Options {
 // TODO: Pass some sort of rendering context to the templates to inject SSR or
 // service worker appropriate rendering functions
 
-export type Template<T> = (
-  state: T,
-  send: Send<T>,
+type Props<T> = {
+  state: T
+  send: Send<T>
   prev: T
+}
+
+export type Template<T> = (
+  props: Props<T>
 ) => TemplateResult | SVGTemplateResult
 
 export class App<T> {
@@ -51,12 +55,19 @@ export class App<T> {
   mount (el: HTMLElement): void {
     const send = this.send
 
-    render(this.mainTemplate(this.store.state, send, this.store.state), el)
+    render(
+      this.mainTemplate({
+        state: this.store.state,
+        send,
+        prev: this.store.state
+      }),
+      el
+    )
 
     if (this._renderOnStateChange) {
       this.store.onStateChange(
         raf((state: T, prev: T) => {
-          render(this.mainTemplate(state, send, prev), el)
+          render(this.mainTemplate({ state, send, prev }), el)
         })
       )
     }
