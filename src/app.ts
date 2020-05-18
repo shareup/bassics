@@ -1,5 +1,9 @@
 import { Store, Send, Update } from './store'
-import { render, TemplateResult, SVGTemplateResult } from 'lit-html'
+import {
+  render as renderToDOM,
+  TemplateResult,
+  SVGTemplateResult
+} from 'lit-html'
 import { raf } from './raf'
 export { render, html, TemplateResult, SVGTemplateResult } from 'lit-html'
 
@@ -12,14 +16,24 @@ interface Options {
 // TODO: Pass some sort of rendering context to the templates to inject SSR or
 // service worker appropriate rendering functions
 
-export type Template<T> = (
-  state: T,
-  send: Send<T>,
+export type Props<T> = {
+  state: T
+  send: Send<T>
   prev: T
+}
+
+export function clean<T, P extends Props<T>> (props: P): Props<T> {
+  const { state, send, prev } = props
+  return { state, send, prev }
+}
+
+export type Template<T> = (
+  props: Props<T>
 ) => TemplateResult | SVGTemplateResult
 
 export class App<T> {
   store: Store<T>
+  prevState: T
   mainTemplate: Template<T>
   send: Send<T>
   update: Update<T>
@@ -32,6 +46,7 @@ export class App<T> {
     options: Options = {}
   ) {
     this.store = new Store(initialState)
+    this.prevState = this.store.state
     this.mainTemplate = mainTemplate
 
     // NOTE: The default is true, so if it's left undefined then we'll call that true
@@ -48,15 +63,27 @@ export class App<T> {
     this.update = this.store.update.bind(this.store)
   }
 
-  mount (el: HTMLElement): void {
-    const send = this.send
+  render () {
+    const currentState = this.store.state
 
-    render(this.mainTemplate(this.store.state, send, this.store.state), el)
+    const result = this.mainTemplate({
+      state: currentState,
+      send: this.send,
+      prev: this.prevState
+    })
+
+    this.prevState = currentState
+
+    return result
+  }
+
+  mount (el: HTMLElement): void {
+    renderToDOM(this.render(), el)
 
     if (this._renderOnStateChange) {
       this.store.onStateChange(
-        raf((state: T, prev: T) => {
-          render(this.mainTemplate(state, send, prev), el)
+        raf(() => {
+          renderToDOM(this.render(), el)
         })
       )
     }
