@@ -16,10 +16,15 @@ interface Options {
 // TODO: Pass some sort of rendering context to the templates to inject SSR or
 // service worker appropriate rendering functions
 
-type Props<T> = {
+export type Props<T> = {
   state: T
   send: Send<T>
   prev: T
+}
+
+export function clean<T, P extends Props<T>> (props: P): Props<T> {
+  const { state, send, prev } = props
+  return { state, send, prev }
 }
 
 export type Template<T> = (
